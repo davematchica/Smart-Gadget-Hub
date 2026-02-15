@@ -2,17 +2,23 @@ import { useEffect, useState } from 'react';
 import { Plus, Search, Edit2, Trash2, Package, X, Loader2, Upload, Image as ImageIcon } from 'lucide-react';
 import { api } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
+import { supabase } from '../../services/supabase';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('all');
+  const [filterAvailability, setFilterAvailability] = useState('all');
+  const [filterFeatured, setFilterFeatured] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [saving, setSaving] = useState(false);
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [deletingImageId, setDeletingImageId] = useState(null);
   const getToken = useAuthStore((state) => state.getToken);
 
   const [formData, setFormData] = useState({
@@ -24,6 +30,17 @@ export default function AdminProducts() {
     featured: false,
     stock_count: 0,
   });
+
+  const categories = [
+    'iPhones',
+    'Android',
+    'Laptops',
+    'Tablets',
+    'Accessories',
+    'Wearables',
+    'Audio',
+    'Gaming'
+  ];
 
   useEffect(() => {
     loadProducts();
@@ -39,6 +56,66 @@ export default function AdminProducts() {
       setLoading(false);
     }
   };
+
+  // Filter and sort products
+  const filteredProducts = products
+    .filter(product => {
+      // Search filter
+      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           product.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Category filter
+      const matchesCategory = filterCategory === 'all' || product.category === filterCategory;
+      
+      // Availability filter
+      const matchesAvailability = filterAvailability === 'all' || 
+                                  (filterAvailability === 'available' && product.availability) ||
+                                  (filterAvailability === 'unavailable' && !product.availability);
+      
+      // Featured filter
+      const matchesFeatured = filterFeatured === 'all' ||
+                             (filterFeatured === 'featured' && product.featured) ||
+                             (filterFeatured === 'notfeatured' && !product.featured);
+      
+      return matchesSearch && matchesCategory && matchesAvailability && matchesFeatured;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.created_at) - new Date(a.created_at);
+        case 'oldest':
+          return new Date(a.created_at) - new Date(b.created_at);
+        case 'name-asc':
+          return a.name.localeCompare(b.name);
+        case 'name-desc':
+          return b.name.localeCompare(a.name);
+        case 'price-low':
+          return parseFloat(a.price) - parseFloat(b.price);
+        case 'price-high':
+          return parseFloat(b.price) - parseFloat(a.price);
+        case 'stock-low':
+          return (a.stock_count || 0) - (b.stock_count || 0);
+        case 'stock-high':
+          return (b.stock_count || 0) - (a.stock_count || 0);
+        default:
+          return 0;
+      }
+    });
+
+  const resetFilters = () => {
+    setSearchTerm('');
+    setFilterCategory('all');
+    setFilterAvailability('all');
+    setFilterFeatured('all');
+    setSortBy('newest');
+  };
+
+  const activeFiltersCount = [
+    filterCategory !== 'all',
+    filterAvailability !== 'all',
+    filterFeatured !== 'all',
+    searchTerm.length > 0
+  ].filter(Boolean).length;
 
   const openAddModal = () => {
     setEditingProduct(null);
@@ -90,6 +167,35 @@ export default function AdminProducts() {
     const newPreviews = imagePreviews.filter((_, i) => i !== index);
     setImageFiles(newFiles);
     setImagePreviews(newPreviews);
+  };
+
+  const handleDeleteImage = async (imageId) => {
+    if (!window.confirm('Are you sure you want to delete this image?')) {
+      return;
+    }
+
+    setDeletingImageId(imageId);
+    try {
+      const token = getToken();
+      await api.deleteProductImage(imageId, token);
+      
+      // Update editingProduct to remove the deleted image
+      if (editingProduct) {
+        const updatedImages = editingProduct.product_images.filter(img => img.id !== imageId);
+        setEditingProduct({
+          ...editingProduct,
+          product_images: updatedImages
+        });
+      }
+      
+      alert('Image deleted successfully!');
+      await loadProducts(); // Reload products list
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      alert('Failed to delete image: ' + error.message);
+    } finally {
+      setDeletingImageId(null);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -173,8 +279,6 @@ export default function AdminProducts() {
   };
 
   const uploadProductImages = async (productId, files, token) => {
-    const { supabase } = await import('../../services/supabase');
-    
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const fileExt = file.name.split('.').pop();
@@ -244,10 +348,6 @@ export default function AdminProducts() {
     }
   };
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -269,17 +369,94 @@ export default function AdminProducts() {
         </button>
       </div>
 
-      {/* Search Bar */}
-      <div className="card p-4">
+      {/* Filters and Search */}
+      <div className="card p-4 space-y-4">
+        {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
           <input
             type="text"
-            placeholder="Search products..."
+            placeholder="Search products by name or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
+        </div>
+
+        {/* Filter Row */}
+        <div className="flex flex-wrap gap-3">
+          {/* Category Filter */}
+          <select
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            className="px-4 py-2 rounded-lg border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm font-medium"
+          >
+            <option value="all">All Categories</option>
+            {categories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+
+          {/* Availability Filter */}
+          <select
+            value={filterAvailability}
+            onChange={(e) => setFilterAvailability(e.target.value)}
+            className="px-4 py-2 rounded-lg border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm font-medium"
+          >
+            <option value="all">All Status</option>
+            <option value="available">Available</option>
+            <option value="unavailable">Unavailable</option>
+          </select>
+
+          {/* Featured Filter */}
+          <select
+            value={filterFeatured}
+            onChange={(e) => setFilterFeatured(e.target.value)}
+            className="px-4 py-2 rounded-lg border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm font-medium"
+          >
+            <option value="all">All Products</option>
+            <option value="featured">Featured Only</option>
+            <option value="notfeatured">Non-Featured</option>
+          </select>
+
+          {/* Sort By */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="px-4 py-2 rounded-lg border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm font-medium"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="name-desc">Name (Z-A)</option>
+            <option value="price-low">Price (Low-High)</option>
+            <option value="price-high">Price (High-Low)</option>
+            <option value="stock-low">Stock (Low-High)</option>
+            <option value="stock-high">Stock (High-Low)</option>
+          </select>
+
+          {/* Reset Filters Button */}
+          {activeFiltersCount > 0 && (
+            <button
+              onClick={resetFilters}
+              className="px-4 py-2 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors text-sm font-semibold inline-flex items-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              Reset Filters ({activeFiltersCount})
+            </button>
+          )}
+        </div>
+
+        {/* Results Count */}
+        <div className="flex items-center justify-between text-sm">
+          <p className="text-neutral-600">
+            Showing <span className="font-semibold">{filteredProducts.length}</span> of <span className="font-semibold">{products.length}</span> products
+          </p>
+          {activeFiltersCount > 0 && (
+            <p className="text-primary-600 font-medium">
+              {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} active
+            </p>
+          )}
         </div>
       </div>
 
@@ -560,12 +737,26 @@ export default function AdminProducts() {
                       <p className="text-xs text-neutral-500 mb-2">Current Images:</p>
                       <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                         {editingProduct.product_images.map((img) => (
-                          <div key={img.id} className="relative aspect-square">
+                          <div key={img.id} className="relative group aspect-square">
                             <img
                               src={img.image_url}
                               alt="Product"
                               className="w-full h-full object-cover rounded-lg border-2 border-neutral-200"
                             />
+                            {/* Delete Button */}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteImage(img.id)}
+                              disabled={deletingImageId === img.id}
+                              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 disabled:opacity-50"
+                              title="Delete image"
+                            >
+                              {deletingImageId === img.id ? (
+                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              ) : (
+                                <X className="w-4 h-4" />
+                              )}
+                            </button>
                             {img.is_primary && (
                               <div className="absolute bottom-1 left-1 bg-primary-600 text-white text-[10px] px-2 py-0.5 rounded">
                                 Primary
@@ -575,7 +766,7 @@ export default function AdminProducts() {
                         ))}
                       </div>
                       <p className="text-xs text-neutral-500 mt-2">
-                        Upload new images to replace current ones
+                        Hover over an image to delete it, or upload new images to add more
                       </p>
                     </div>
                   )}

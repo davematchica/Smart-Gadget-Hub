@@ -50,32 +50,37 @@ export const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data, error } = await supabase
+    // Get product
+    const { data: product, error: productError } = await supabase
       .from('products')
-      .select(`
-        *,
-        product_images (
-          id,
-          image_url,
-          display_order,
-          is_primary
-        )
-      `)
+      .select('*')
       .eq('id', id)
       .single();
 
-    if (error) throw error;
+    if (productError) throw productError;
 
-    if (!data) {
+    if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    // Sort images by display order
-    if (data.product_images) {
-      data.product_images.sort((a, b) => a.display_order - b.display_order);
+    // Get images separately with EXPLICIT filter
+    const { data: images, error: imagesError } = await supabase
+      .from('product_images')
+      .select('id, image_url, display_order, is_primary')
+      .eq('product_id', id)  // Explicitly filter by product_id
+      .order('display_order', { ascending: true });
+
+    if (imagesError) {
+      console.error('Error loading images:', imagesError);
+      // Don't fail the whole request if images fail
+      product.product_images = [];
+    } else {
+      product.product_images = images || [];
     }
 
-    res.json(data);
+    console.log(`Product ${id}: ${product.name} - ${product.product_images.length} images`);
+
+    res.json(product);
   } catch (error) {
     console.error('Get product by ID error:', error);
     res.status(500).json({ error: error.message });
@@ -258,12 +263,41 @@ export const deleteProductImage = async (req, res) => {
   try {
     const { imageId } = req.params;
 
-    const { error } = await supabaseAdmin
+    // Get image details first (to get storage path)
+    const { data: image, error: fetchError } = await supabaseAdmin
+      .from('product_images')
+      .select('image_url, product_id')
+      .eq('id', imageId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    // Delete from database
+    const { error: deleteError } = await supabaseAdmin
       .from('product_images')
       .delete()
       .eq('id', imageId);
 
-    if (error) throw error;
+    if (deleteError) throw deleteError;
+
+    // Try to delete from storage (optional - don't fail if storage delete fails)
+    if (image?.image_url) {
+      try {
+        // Extract file path from URL
+        // URL format: https://[project].supabase.co/storage/v1/object/public/product-images/[path]
+        const urlParts = image.image_url.split('/product-images/');
+        if (urlParts.length > 1) {
+          const filePath = urlParts[1];
+          await supabaseAdmin.storage
+            .from('product-images')
+            .remove([filePath]);
+          console.log('Deleted image from storage:', filePath);
+        }
+      } catch (storageError) {
+        console.error('Failed to delete from storage (non-critical):', storageError);
+        // Don't throw - image is already deleted from database
+      }
+    }
 
     res.json({ message: 'Image deleted successfully' });
   } catch (error) {

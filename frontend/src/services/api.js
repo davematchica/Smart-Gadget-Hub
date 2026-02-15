@@ -90,6 +90,13 @@ class ApiService {
     });
   }
 
+  async deleteProductImage(imageId, token) {
+    return this.request(`/products/images/${imageId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }
+
   // Inquiries
   async createInquiry(data) {
     return this.request('/inquiries', {
