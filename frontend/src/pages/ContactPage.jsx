@@ -123,13 +123,20 @@ export default function ContactPage() {
                 </div>
               )}
 
-              <button type="submit" disabled={loading} className="w-full btn-primary">
+              <button 
+                type="submit" 
+                disabled={loading} 
+                className="w-full btn-primary inline-flex items-center justify-center gap-2"
+              >
                 {loading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto" />
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Sending...</span>
+                  </>
                 ) : (
                   <>
-                    <Send className="w-5 h-5 mr-2" />
-                    Send Message
+                    <Send className="w-5 h-5" />
+                    <span>Send Message</span>
                   </>
                 )}
               </button>
