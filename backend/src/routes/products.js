@@ -7,7 +7,9 @@ import {
   getFeaturedProducts,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  addProductImage,
+  deleteProductImage
 } from '../controllers/productsController.js';
 import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
@@ -40,7 +42,7 @@ router.put('/:id',
     param('id').isUUID().withMessage('Invalid product ID'),
     body('name').optional().trim().notEmpty(),
     body('category').optional().trim().notEmpty(),
-    body('price').optional().isFloat({ min: 0.01 }).withMessage('Price must be greater than 0'),
+    body('price').optional().isFloat({ min: 0 }),
     body('availability').optional().isBoolean(),
     body('featured').optional().isBoolean()
   ],
@@ -53,6 +55,26 @@ router.delete('/:id',
   [param('id').isUUID().withMessage('Invalid product ID')],
   validate,
   deleteProduct
+);
+
+// Image routes
+router.post('/:id/images',
+  requireAuth,
+  [
+    param('id').isUUID().withMessage('Invalid product ID'),
+    body('image_url').trim().notEmpty().withMessage('Image URL is required'),
+    body('is_primary').optional().isBoolean(),
+    body('display_order').optional().isInt({ min: 0 })
+  ],
+  validate,
+  addProductImage
+);
+
+router.delete('/images/:imageId',
+  requireAuth,
+  [param('imageId').isUUID().withMessage('Invalid image ID')],
+  validate,
+  deleteProductImage
 );
 
 export default router;

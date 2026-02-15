@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Search, Edit2, Trash2, Package, X, Loader2 } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Package, X, Loader2, Upload, Image as ImageIcon } from 'lucide-react';
 import { api } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 
@@ -10,6 +10,9 @@ export default function AdminProducts() {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const getToken = useAuthStore((state) => state.getToken);
 
   const [formData, setFormData] = useState({
@@ -48,6 +51,8 @@ export default function AdminProducts() {
       featured: false,
       stock_count: 0,
     });
+    setImageFiles([]);
+    setImagePreviews([]);
     setShowModal(true);
   };
 
@@ -62,7 +67,29 @@ export default function AdminProducts() {
       featured: product.featured || false,
       stock_count: product.stock_count || 0,
     });
+    setImageFiles([]);
+    setImagePreviews([]);
     setShowModal(true);
+  };
+
+  const handleImageSelect = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    // Limit to 5 images
+    const selectedFiles = files.slice(0, 5);
+    setImageFiles(selectedFiles);
+
+    // Create previews
+    const previews = selectedFiles.map(file => URL.createObjectURL(file));
+    setImagePreviews(previews);
+  };
+
+  const removeImage = (index) => {
+    const newFiles = imageFiles.filter((_, i) => i !== index);
+    const newPreviews = imagePreviews.filter((_, i) => i !== index);
+    setImageFiles(newFiles);
+    setImagePreviews(newPreviews);
   };
 
   const handleSubmit = async (e) => {
@@ -107,9 +134,31 @@ export default function AdminProducts() {
       if (editingProduct) {
         await api.updateProduct(editingProduct.id, productData, token);
         alert('Product updated successfully!');
+        
+        // Upload images if any
+        if (imageFiles.length > 0) {
+          setUploadingImages(true);
+          try {
+            await uploadProductImages(editingProduct.id, imageFiles, token);
+            alert('Images uploaded successfully!');
+          } catch (imgError) {
+            console.error('Image upload error:', imgError);
+            alert('Product updated but some images failed to upload. You can add images later by editing the product.');
+          }
+          setUploadingImages(false);
+        }
       } else {
-        await api.createProduct(productData, token);
+        const result = await api.createProduct(productData, token);
+        console.log('Create product result:', result);
+        
         alert('Product added successfully!');
+        
+        // Only try to upload images if we have them
+        // For now, skip image upload since backend isn't ready
+        if (imageFiles.length > 0) {
+          console.log('Images selected but upload not implemented yet:', imageFiles.length, 'images');
+          alert('Product created! Image upload will be available once backend storage is configured.');
+        }
       }
       
       await loadProducts();
@@ -119,6 +168,65 @@ export default function AdminProducts() {
       alert('Failed to save product: ' + (error.message || 'Unknown error'));
     } finally {
       setSaving(false);
+      setUploadingImages(false);
+    }
+  };
+
+  const uploadProductImages = async (productId, files, token) => {
+    const { supabase } = await import('../../services/supabase');
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${productId}/${Date.now()}_${i}.${fileExt}`;
+      
+      try {
+        // Upload to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          throw uploadError;
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(fileName);
+
+        const publicUrl = urlData.publicUrl;
+        console.log('Image uploaded:', publicUrl);
+
+        // Save to database using API
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/products/${productId}/images`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            image_url: publicUrl,
+            is_primary: i === 0,
+            display_order: i
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          console.error('Failed to save image URL:', error);
+          throw new Error(error.error || 'Failed to save image URL');
+        }
+
+        console.log(`Image ${i + 1} saved successfully`);
+      } catch (error) {
+        console.error(`Error uploading image ${i + 1}:`, error);
+        throw error;
+      }
     }
   };
 
@@ -391,6 +499,87 @@ export default function AdminProducts() {
                   className="input"
                   placeholder="0"
                 />
+              </div>
+
+              {/* Product Images Upload */}
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  Product Images {!editingProduct && '(Optional)'}
+                </label>
+                <div className="space-y-3">
+                  {/* Upload Button */}
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-neutral-300 rounded-xl hover:border-primary-400 hover:bg-primary-50/50 transition-all cursor-pointer group">
+                    <div className="flex flex-col items-center">
+                      <Upload className="w-8 h-8 text-neutral-400 group-hover:text-primary-600 mb-2" />
+                      <p className="text-sm text-neutral-600 group-hover:text-primary-700 font-medium">
+                        Click to upload images
+                      </p>
+                      <p className="text-xs text-neutral-400 mt-1">
+                        PNG, JPG up to 5 images
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {/* Image Previews */}
+                  {imagePreviews.length > 0 && (
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative group aspect-square">
+                          <img
+                            src={preview}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-full object-cover rounded-lg border-2 border-neutral-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                          {index === 0 && (
+                            <div className="absolute bottom-1 left-1 bg-primary-600 text-white text-[10px] px-2 py-0.5 rounded">
+                              Primary
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Show existing images when editing */}
+                  {editingProduct && editingProduct.product_images?.length > 0 && (
+                    <div>
+                      <p className="text-xs text-neutral-500 mb-2">Current Images:</p>
+                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                        {editingProduct.product_images.map((img) => (
+                          <div key={img.id} className="relative aspect-square">
+                            <img
+                              src={img.image_url}
+                              alt="Product"
+                              className="w-full h-full object-cover rounded-lg border-2 border-neutral-200"
+                            />
+                            {img.is_primary && (
+                              <div className="absolute bottom-1 left-1 bg-primary-600 text-white text-[10px] px-2 py-0.5 rounded">
+                                Primary
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-neutral-500 mt-2">
+                        Upload new images to replace current ones
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">

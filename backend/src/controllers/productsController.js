@@ -220,3 +220,54 @@ export const deleteProduct = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const addProductImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { image_url, is_primary = false, display_order = 0 } = req.body;
+
+    // If this is set as primary, unset other primary images first
+    if (is_primary) {
+      await supabaseAdmin
+        .from('product_images')
+        .update({ is_primary: false })
+        .eq('product_id', id);
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('product_images')
+      .insert({
+        product_id: id,
+        image_url,
+        is_primary,
+        display_order
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({ image: data, message: 'Image added successfully' });
+  } catch (error) {
+    console.error('Add product image error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const deleteProductImage = async (req, res) => {
+  try {
+    const { imageId } = req.params;
+
+    const { error } = await supabaseAdmin
+      .from('product_images')
+      .delete()
+      .eq('id', imageId);
+
+    if (error) throw error;
+
+    res.json({ message: 'Image deleted successfully' });
+  } catch (error) {
+    console.error('Delete product image error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
