@@ -2,10 +2,12 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Menu, X, Phone, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { api } from '../../services/api';
 
 export default function PublicLayout() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [seller, setSeller] = useState(null);
   const location = useLocation();
 
   useEffect(() => {
@@ -20,6 +22,19 @@ export default function PublicLayout() {
     setIsMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [location]);
+
+  useEffect(() => {
+    loadSellerProfile();
+  }, []);
+
+  const loadSellerProfile = async () => {
+    try {
+      const data = await api.getSellerProfile();
+      setSeller(data);
+    } catch (error) {
+      console.error('Error loading seller profile:', error);
+    }
+  };
 
   const navLinks = [
     { path: '/', label: 'Home' },
@@ -240,11 +255,17 @@ export default function PublicLayout() {
             <div>
               <h4 className="font-semibold mb-4 text-sm">Contact</h4>
               <div className="flex flex-col gap-2 text-neutral-400 text-sm">
-                <a href="mailto:contact@smartgadgethub.com" className="hover:text-primary-400 transition-colors break-all">
-                  contact@smartgadgethub.com
+                <a 
+                  href={`mailto:${seller?.email || 'contact@smartgadgethub.com'}`} 
+                  className="hover:text-primary-400 transition-colors break-all"
+                >
+                  {seller?.email || 'contact@smartgadgethub.com'}
                 </a>
-                <a href="tel:+63" className="hover:text-primary-400 transition-colors">
-                  +63 XXX XXX XXXX
+                <a 
+                  href={`tel:${seller?.phone || '+63'}`} 
+                  className="hover:text-primary-400 transition-colors"
+                >
+                  {seller?.phone || '+63 XXX XXX XXXX'}
                 </a>
               </div>
             </div>
