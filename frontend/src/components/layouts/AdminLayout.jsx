@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, MessageSquare, User, LogOut, Sparkles, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Package, MessageSquare, User, LogOut, Sparkles, Menu, X, Home } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
 export default function AdminLayout() {
@@ -136,6 +136,15 @@ export default function AdminLayout() {
             </div>
           </div>
           
+          {/* Back to Website Button */}
+          <Link
+            to="/"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-primary-50 to-accent-50 text-primary-700 rounded-xl font-semibold hover:from-primary-100 hover:to-accent-100 active:scale-95 transition-all duration-200 border border-primary-200 group"
+          >
+            <Home className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            <span className="text-sm">Back to Website</span>
+          </Link>
+
           <button
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 active:scale-95 transition-all duration-200 border border-red-100"

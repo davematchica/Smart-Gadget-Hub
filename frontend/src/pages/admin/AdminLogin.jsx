@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Sparkles, Mail, Lock } from 'lucide-react';
+import { Sparkles, Mail, Lock, ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
 export default function AdminLogin() {
@@ -28,7 +28,17 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-accent-50 to-primary-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-accent-50 to-primary-100 p-4 relative">
+      {/* Back to Website Button - Top Left */}
+      <Link
+        to="/"
+        className="absolute top-4 left-4 sm:top-6 sm:left-6 inline-flex items-center gap-2 px-4 py-2 glass rounded-xl text-neutral-700 hover:text-primary-600 font-semibold transition-all hover:shadow-lg group"
+      >
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <span className="hidden sm:inline">Back to Website</span>
+        <span className="sm:hidden">Back</span>
+      </Link>
+
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -40,6 +50,7 @@ export default function AdminLogin() {
             <h1 className="text-2xl font-display font-bold gradient-text">Smart GadgetHub</h1>
           </div>
           <h2 className="text-xl font-semibold text-neutral-700">Admin Login</h2>
+          <p className="text-sm text-neutral-500 mt-2">Enter your credentials to access the admin panel</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -90,6 +101,17 @@ export default function AdminLogin() {
               'Login'
             )}
           </button>
+
+          {/* Alternative Back Link - Below Form */}
+          <div className="text-center pt-4 border-t border-neutral-200">
+            <Link
+              to="/"
+              className="text-sm text-neutral-600 hover:text-primary-600 transition-colors inline-flex items-center gap-1"
+            >
+              <ArrowLeft className="w-3 h-3" />
+              Return to main site
+            </Link>
+          </div>
         </form>
       </motion.div>
     </div>
