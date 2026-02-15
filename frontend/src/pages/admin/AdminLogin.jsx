@@ -47,7 +47,7 @@ export default function AdminLogin() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Sparkles className="w-8 h-8 text-primary-600" />
-            <h1 className="text-2xl font-display font-bold gradient-text">Smart GadgetHub</h1>
+            <h1 className="text-2xl font-display font-bold gradient-text">Ann's iGadgets Online</h1>
           </div>
           <h2 className="text-xl font-semibold text-neutral-700">Admin Login</h2>
           <p className="text-sm text-neutral-500 mt-2">Enter your credentials to access the admin panel</p>

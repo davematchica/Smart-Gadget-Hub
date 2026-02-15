@@ -84,11 +84,10 @@ export default function HomePage() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-5xl md:text-7xl font-display font-bold mb-6 leading-tight"
             >
-              Discover Premium{' '}
+              iPhones, Laptops,{' '}
               <span className="gradient-text animate-gradient-x">
-                Gadgets
+                iPads & More!
               </span>
-              <br />You'll Love
             </motion.h1>
 
             <motion.p
@@ -97,7 +96,7 @@ export default function HomePage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-xl text-neutral-600 mb-8 max-w-2xl mx-auto"
             >
-              Curated collection of authentic smartphones, laptops, and accessories.
+              Your trusted source for premium gadgets. Curated by Ann Montenegro.
               Your trusted source for quality tech.
             </motion.p>
 

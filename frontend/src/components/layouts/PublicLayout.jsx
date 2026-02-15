@@ -65,7 +65,7 @@ export default function PublicLayout() {
               </div>
               <div className="min-w-0">
                 <h1 className="text-base md:text-xl font-display font-bold gradient-text leading-tight truncate">
-                  Smart GadgetHub
+                  Ann's iGadgets Online
                 </h1>
                 <p className="text-[9px] md:text-[10px] text-neutral-500 font-medium">by Ann Montenegro</p>
               </div>
@@ -210,10 +210,10 @@ export default function PublicLayout() {
             <div className="col-span-1 sm:col-span-2">
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="w-6 h-6 text-primary-400" />
-                <h3 className="text-xl font-display font-bold">Smart GadgetHub</h3>
+                <h3 className="text-xl font-display font-bold">Ann's iGadgets Online</h3>
               </div>
               <p className="text-neutral-400 mb-4 text-sm leading-relaxed">
-                Your trusted source for premium gadgets and devices. Curated by Ann Montenegro.
+                Your trusted source for iPhones, Laptops, iPads & More! Curated by Ann Montenegro.
               </p>
               <p className="text-xs text-neutral-500">
                 DTI Registered Business
@@ -272,7 +272,7 @@ export default function PublicLayout() {
           </div>
 
           <div className="border-t border-neutral-800 mt-8 pt-8 text-center text-xs sm:text-sm text-neutral-500">
-            <p>&copy; {new Date().getFullYear()} Smart GadgetHub by Ann Montenegro. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Ann's iGadgets Online by Ann Montenegro. All rights reserved.</p>
           </div>
         </div>
       </footer>

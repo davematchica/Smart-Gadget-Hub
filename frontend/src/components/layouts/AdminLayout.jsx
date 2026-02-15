@@ -34,7 +34,7 @@ export default function AdminLayout() {
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="font-display font-bold text-sm gradient-text">Smart GadgetHub</h1>
+            <h1 className="font-display font-bold text-sm gradient-text">Ann's iGadgets</h1>
             <p className="text-[10px] text-neutral-500">Admin Panel</p>
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function AdminLayout() {
               </div>
               <div>
                 <h1 className="font-display font-bold text-lg gradient-text leading-none mb-1">
-                  Smart GadgetHub
+                  Ann's iGadgets
                 </h1>
                 <p className="text-xs text-neutral-500 font-medium">Admin Panel</p>
               </div>
