@@ -30,7 +30,7 @@ router.put('/:id/status',
   requireAuth,
   [
     param('id').isUUID().withMessage('Invalid inquiry ID'),
-    body('status').isIn(['pending', 'contacted', 'completed', 'cancelled'])
+    body('status').isIn(['pending', 'responded', 'contacted', 'completed', 'cancelled'])
       .withMessage('Invalid status')
   ],
   validate,
