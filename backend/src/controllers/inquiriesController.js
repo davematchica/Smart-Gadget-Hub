@@ -95,3 +95,34 @@ export const updateInquiryStatus = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const deleteInquiry = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if inquiry has been converted to a sale
+    const { data: sale } = await supabaseAdmin
+      .from('sales')
+      .select('id')
+      .eq('inquiry_id', id)
+      .single();
+
+    if (sale) {
+      return res.status(400).json({ 
+        error: 'Cannot delete inquiry that has been converted to a sale' 
+      });
+    }
+
+    const { error } = await supabaseAdmin
+      .from('inquiries')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    res.json({ message: 'Inquiry deleted successfully' });
+  } catch (error) {
+    console.error('Delete inquiry error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};

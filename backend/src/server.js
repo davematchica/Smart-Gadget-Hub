@@ -6,6 +6,8 @@ import productsRouter from './routes/products.js';
 import inquiriesRouter from './routes/inquiries.js';
 import sellerRouter from './routes/seller.js';
 import adminRouter from './routes/admin.js';
+import dashboardRoutes from './routes/dashboard.js';
+import salesRoutes from './routes/sales.js';
 
 dotenv.config();
 
@@ -66,6 +68,10 @@ app.use('/api/products', productsRouter);
 app.use('/api/inquiries', inquiriesRouter);
 app.use('/api/seller', sellerRouter);
 app.use('/api/admin', adminRouter);
+
+// Routes for Sales Tracking
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/sales', salesRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

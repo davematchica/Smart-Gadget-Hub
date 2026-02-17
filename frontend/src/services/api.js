@@ -121,6 +121,13 @@ class ApiService {
     });
   }
 
+  async deleteInquiry(id, token) {
+    return this.request(`/inquiries/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }
+
   // Seller Profile
   async getSellerProfile() {
     return this.request('/seller/profile');
@@ -177,6 +184,45 @@ class ApiService {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ images }),
+    });
+  }
+
+  // Dashboard
+  async getDashboardStats(token) {
+    return this.request('/dashboard/stats', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }
+
+  // Sales
+  async createSale(data, token) {
+    return this.request('/sales', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getAllSales(token) {
+    return this.request('/sales', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }
+
+  async updateSale(id, data, token) {
+    return this.request(`/sales/${id}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteSale(id, token) {
+    return this.request(`/sales/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
     });
   }
 }

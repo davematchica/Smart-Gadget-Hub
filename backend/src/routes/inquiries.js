@@ -3,7 +3,8 @@ import { body, param } from 'express-validator';
 import {
   createInquiry,
   getAllInquiries,
-  updateInquiryStatus
+  updateInquiryStatus,
+  deleteInquiry
 } from '../controllers/inquiriesController.js';
 import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
@@ -35,6 +36,13 @@ router.put('/:id/status',
   ],
   validate,
   updateInquiryStatus
+);
+
+router.delete('/:id',
+  requireAuth,
+  [param('id').isUUID().withMessage('Invalid inquiry ID')],
+  validate,
+  deleteInquiry
 );
 
 export default router;
