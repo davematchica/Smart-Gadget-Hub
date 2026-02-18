@@ -141,6 +141,27 @@ class ApiService {
     });
   }
 
+  async uploadProfilePicture(file, token) {
+    const formData = new FormData();
+    formData.append('image', file);
+    const url = `${this.baseUrl}/seller/profile/picture`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Upload failed');
+    return data;
+  }
+
+  async removeProfilePicture(token) {
+    return this.request('/seller/profile/picture', {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }
+
   // Admin
   async login(email, password) {
     return this.request('/admin/login', {
@@ -225,6 +246,68 @@ class ApiService {
       headers: { Authorization: `Bearer ${token}` },
     });
   }
+
+  // Reviews
+  async getReviews() {
+    return this.request('/reviews');
+  }
+
+  async getFeaturedReviews() {
+    return this.request('/reviews/featured');
+  }
+
+  async createReview(data, token) {
+    return this.request('/reviews', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  }
+
+  async uploadReviewImages(reviewId, files, token) {
+    const formData = new FormData();
+    files.forEach(file => formData.append('images', file));
+    const url = `${this.baseUrl}/reviews/${reviewId}/images`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Upload failed');
+    return data;
+  }
+
+  async updateReview(id, data, token) {
+    return this.request(`/reviews/${id}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  }
+
+  async toggleReviewFeatured(id, is_featured, token) {
+    return this.request(`/reviews/${id}/featured`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ is_featured }),
+    });
+  }
+
+  async deleteReviewImage(imageId, token) {
+    return this.request(`/reviews/images/${imageId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }
+
+  async deleteReview(id, token) {
+    return this.request(`/reviews/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }
+
 }
 
 export const api = new ApiService();

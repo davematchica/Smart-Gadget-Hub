@@ -39,6 +39,7 @@ export default function PublicLayout() {
   const navLinks = [
     { path: '/', label: 'Home' },
     { path: '/products', label: 'Products' },
+    { path: '/reviews', label: 'Reviews' },
     { path: '/about', label: 'About' },
     { path: '/contact', label: 'Contact' },
   ];
@@ -208,9 +209,25 @@ export default function PublicLayout() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Brand */}
             <div className="col-span-1 sm:col-span-2">
-              <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="w-6 h-6 text-primary-400" />
-                <h3 className="text-xl font-display font-bold">Ann's iGadgets Online</h3>
+              <div className="flex items-start gap-4 mb-4">
+                {/* Profile Picture */}
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-primary-400 to-accent-400 flex-shrink-0 border-2 border-neutral-700">
+                  {seller?.profile_picture_url ? (
+                    <img 
+                      src={seller.profile_picture_url} 
+                      alt={seller.owner_name || 'Ann Montenegro'} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Sparkles className="w-7 h-7 text-white" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-display font-bold mb-1">Ann's iGadgets Online</h3>
+                  <p className="text-sm text-primary-400 font-medium">by {seller?.owner_name || 'Ann Montenegro'}</p>
+                </div>
               </div>
               <p className="text-neutral-400 mb-4 text-sm leading-relaxed">
                 Your trusted source for iPhones, Laptops, iPads & More! Curated by Ann Montenegro.

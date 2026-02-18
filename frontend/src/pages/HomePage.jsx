@@ -1,26 +1,39 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Sparkles, Shield, Zap, Heart, ArrowRight, Star, TrendingUp } from 'lucide-react';
+import { Sparkles, Shield, Zap, Heart, ArrowRight, Star, TrendingUp, Quote, ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [seller, setSeller] = useState(null);
+  const [featuredReviews, setFeaturedReviews] = useState([]);
+  const [reviewIndex, setReviewIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadData();
   }, []);
 
+  // Auto-advance carousel
+  useEffect(() => {
+    if (featuredReviews.length <= 1) return;
+    const timer = setInterval(() => {
+      setReviewIndex(p => (p + 1) % featuredReviews.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [featuredReviews]);
+
   const loadData = async () => {
     try {
-      const [productsData, sellerData] = await Promise.all([
+      const [productsData, sellerData, reviewsData] = await Promise.all([
         api.getFeaturedProducts(),
         api.getSellerProfile(),
+        api.getFeaturedReviews(),
       ]);
       setFeaturedProducts(productsData.products || []);
       setSeller(sellerData);
+      setFeaturedReviews(reviewsData.reviews || []);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -274,6 +287,129 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── Reviews Carousel ─────────────────── */}
+      {featuredReviews.length > 0 && (
+        <section className="py-20 bg-white">
+          <div className="container-custom">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <div className="flex justify-center gap-1 mb-4">
+                {[1,2,3,4,5].map(i => <Star key={i} className="w-6 h-6 text-yellow-400 fill-yellow-400" />)}
+              </div>
+              <h2 className="text-4xl md:text-5xl font-display font-bold mb-4">What Customers Say</h2>
+              <p className="text-lg text-neutral-600">Real reviews from real buyers</p>
+            </motion.div>
+
+            {/* Carousel */}
+            <div className="relative max-w-4xl mx-auto">
+              <div className="overflow-hidden">
+                <motion.div
+                  key={reviewIndex}
+                  initial={{ opacity: 0, x: 40 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -40 }}
+                  transition={{ duration: 0.4 }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center"
+                >
+                  {/* Image */}
+                  {(() => {
+                    const review = featuredReviews[reviewIndex];
+                    const imgs = review?.review_images || [];
+                    return (
+                      <>
+                        {imgs.length > 0 ? (
+                          <div className="rounded-2xl overflow-hidden aspect-square shadow-xl">
+                            <img
+                              src={imgs[0]?.image_url}
+                              alt={review?.customer_name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="rounded-2xl bg-gradient-to-br from-primary-100 to-accent-100 aspect-square flex items-center justify-center shadow-xl">
+                            <Star className="w-24 h-24 text-primary-300" />
+                          </div>
+                        )}
+
+                        {/* Content */}
+                        <div className="flex flex-col justify-center">
+                          <Quote className="w-10 h-10 text-primary-200 mb-4" />
+                          <p className="text-xl text-neutral-700 leading-relaxed italic mb-6">
+                            "{review?.description}"
+                          </p>
+                          {/* Stars */}
+                          <div className="flex gap-1 mb-4">
+                            {Array.from({ length: 5 }, (_, i) => (
+                              <Star key={i} className={`w-5 h-5 ${i < review?.rating ? 'text-yellow-400 fill-yellow-400' : 'text-neutral-200'}`} />
+                            ))}
+                          </div>
+                          {/* Customer info */}
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full flex items-center justify-center">
+                              <span className="text-white text-lg font-bold">
+                                {review?.customer_name?.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="font-bold text-neutral-900">{review?.customer_name}</p>
+                              <p className="text-sm text-primary-600 font-medium">Bought: {review?.product_name}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </motion.div>
+              </div>
+
+              {/* Navigation */}
+              {featuredReviews.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setReviewIndex(p => (p - 1 + featuredReviews.length) % featuredReviews.length)}
+                    className="absolute -left-5 top-1/2 -translate-y-1/2 w-10 h-10 bg-white border-2 border-neutral-200 rounded-full shadow-lg flex items-center justify-center hover:border-primary-400 hover:text-primary-600 transition-all"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setReviewIndex(p => (p + 1) % featuredReviews.length)}
+                    className="absolute -right-5 top-1/2 -translate-y-1/2 w-10 h-10 bg-white border-2 border-neutral-200 rounded-full shadow-lg flex items-center justify-center hover:border-primary-400 hover:text-primary-600 transition-all"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+
+                  {/* Dots */}
+                  <div className="flex justify-center gap-2 mt-8">
+                    {featuredReviews.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setReviewIndex(i)}
+                        className={`rounded-full transition-all ${i === reviewIndex ? 'w-6 h-2.5 bg-primary-600' : 'w-2.5 h-2.5 bg-neutral-300 hover:bg-primary-300'}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* See all reviews link */}
+            <div className="text-center mt-10">
+              <Link
+                to="/reviews"
+                className="inline-flex items-center gap-2 px-6 py-3 border-2 border-primary-600 text-primary-600 rounded-xl font-semibold hover:bg-primary-600 hover:text-white transition-all duration-300"
+              >
+                See All Reviews
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-primary-600 via-primary-700 to-accent-600 text-white relative overflow-hidden">

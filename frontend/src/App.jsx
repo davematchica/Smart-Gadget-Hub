@@ -8,6 +8,7 @@ import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
+import ReviewsPage from './pages/ReviewsPage';
 
 // Admin Pages
 import AdminLogin from './pages/admin/AdminLogin';
@@ -15,6 +16,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminProducts from './pages/admin/AdminProducts';
 import AdminInquiries from './pages/admin/AdminInquiries';
 import AdminProfile from './pages/admin/AdminProfile';
+import AdminReviews from './pages/admin/AdminReviews';
 
 // Layout Components
 import PublicLayout from './components/layouts/PublicLayout';
@@ -38,6 +40,7 @@ function App() {
           <Route path="/products/:id" element={<ProductDetailPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/reviews" element={<ReviewsPage />} />
         </Route>
 
         {/* Admin Login */}
@@ -48,6 +51,7 @@ function App() {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/products" element={<AdminProducts />} />
           <Route path="/admin/inquiries" element={<AdminInquiries />} />
+          <Route path="/admin/reviews" element={<AdminReviews />} />
           <Route path="/admin/profile" element={<AdminProfile />} />
         </Route>
       </Routes>

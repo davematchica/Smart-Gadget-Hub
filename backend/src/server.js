@@ -6,8 +6,9 @@ import productsRouter from './routes/products.js';
 import inquiriesRouter from './routes/inquiries.js';
 import sellerRouter from './routes/seller.js';
 import adminRouter from './routes/admin.js';
-import dashboardRoutes from './routes/dashboard.js';
-import salesRoutes from './routes/sales.js';
+import dashboardRouter from './routes/dashboard.js';
+import salesRouter from './routes/sales.js';
+import reviewsRouter from './routes/reviews.js';
 
 dotenv.config();
 
@@ -39,7 +40,7 @@ app.use(cors({
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Content-Type', 'Authorization'],
   preflightContinue: false,
@@ -68,10 +69,9 @@ app.use('/api/products', productsRouter);
 app.use('/api/inquiries', inquiriesRouter);
 app.use('/api/seller', sellerRouter);
 app.use('/api/admin', adminRouter);
-
-// Routes for Sales Tracking
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/sales', salesRoutes);
+app.use('/api/dashboard', dashboardRouter);
+app.use('/api/sales', salesRouter);
+app.use('/api/reviews', reviewsRouter);
 
 // Health check
 app.get('/health', (req, res) => {

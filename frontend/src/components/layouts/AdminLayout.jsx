@@ -1,13 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, MessageSquare, User, LogOut, Sparkles, Menu, X, Home } from 'lucide-react';
+import { LayoutDashboard, Package, MessageSquare, User, LogOut, Sparkles, Menu, X, Home, Star } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { api } from '../../services/api';
 
 export default function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [seller, setSeller] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+
+  useEffect(() => {
+    loadSellerProfile();
+  }, []);
+
+  const loadSellerProfile = async () => {
+    try {
+      const data = await api.getSellerProfile();
+      setSeller(data);
+    } catch (error) {
+      console.error('Error loading seller profile:', error);
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -22,6 +37,7 @@ export default function AdminLayout() {
     { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/admin/products', icon: Package, label: 'Products' },
     { path: '/admin/inquiries', icon: MessageSquare, label: 'Inquiries' },
+    { path: '/admin/reviews', icon: Star, label: 'Reviews' },
     { path: '/admin/profile', icon: User, label: 'Profile' },
   ];
 
@@ -124,13 +140,23 @@ export default function AdminLayout() {
         <div className="p-4 border-t border-neutral-100 space-y-3">
           <div className="px-4 py-3 bg-gradient-to-br from-neutral-50 to-neutral-100 rounded-xl border border-neutral-200">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-100 to-accent-100 rounded-full flex items-center justify-center">
-                <User className="w-5 h-5 text-primary-600" />
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary-100 to-accent-100 flex-shrink-0">
+                {seller?.profile_picture_url ? (
+                  <img 
+                    src={seller.profile_picture_url} 
+                    alt={seller.owner_name || 'Admin'} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <User className="w-5 h-5 text-primary-600" />
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-xs text-neutral-500 font-medium mb-0.5">Logged in as</div>
                 <div className="text-sm font-semibold text-neutral-700 truncate">
-                  {user?.email || 'Admin User'}
+                  {seller?.owner_name || user?.email || 'Admin User'}
                 </div>
               </div>
             </div>

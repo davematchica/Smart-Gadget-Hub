@@ -8,7 +8,11 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js"
   },
-  "keywords": ["gadgets", "ecommerce", "api"],
+  "keywords": [
+    "gadgets",
+    "ecommerce",
+    "api"
+  ],
   "author": "Ann Montenegro",
   "license": "ISC",
   "dependencies": {
